@@ -1,6 +1,8 @@
 # Deploy cPanel con Git Version Control
 
-Questo progetto e' una applicazione Laravel. Il repository contiene il codice sorgente, non contiene `.env`, `vendor`, `node_modules` o build asset generati.
+Questo progetto e' una applicazione Laravel. Per questo hosting senza terminale, il repository contiene anche `vendor` e `public/build`, cosi' cPanel puo' pubblicare il codice senza eseguire Composer o NPM sul server.
+
+Il repository non contiene `.env`, `node_modules` o il dump SQL.
 
 ## Requisiti hosting
 
@@ -8,7 +10,7 @@ Questo progetto e' una applicazione Laravel. Il repository contiene il codice so
 - Estensioni PHP richieste da Laravel/Filament.
 - Database MySQL configurato.
 - Accesso al pannello cPanel con Git Version Control.
-- Possibilita' di eseguire Composer dal pannello cPanel, oppure dipendenze gia' installate sul server.
+- PHP 8.3 o superiore sul dominio cPanel.
 
 ## Collegamento repository
 
@@ -96,7 +98,15 @@ php artisan optimize:clear
 php artisan config:cache
 ```
 
-Se cPanel non offre terminale o strumenti Composer/Artisan, serve abilitare una funzione equivalente nel pannello hosting o fare eseguire questi comandi dall'assistenza hosting. Senza migrazioni il database non avra' le tabelle multinegozio.
+Se cPanel non offre terminale o strumenti Composer/Artisan, importa il file SQL generato localmente da phpMyAdmin. In questo caso non eseguire le migrazioni sul server.
+
+Il dump locale pronto per phpMyAdmin si trova in:
+
+```text
+exports/optima_phpmyadmin.sql
+```
+
+Questo file non viene pubblicato su GitHub.
 
 ## Document root
 
