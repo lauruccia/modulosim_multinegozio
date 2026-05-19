@@ -20,6 +20,23 @@ Route::get('/debug-routes', function () {
     ]);
 });
 
+// Testa il model binding con :slug
+Route::get('/debug-bind/{store:slug}', function (\App\Models\Store $store) {
+    return response()->json($store->only(['id','slug','is_active','name']));
+});
+
+// Testa il rendering della view wizard
+Route::get('/debug-view', function () {
+    $store = \App\Models\Store::where('slug', '4tacche')->first();
+    $steps = ['dati','documento','contatti','indirizzi','numero','servizi','pagamento'];
+    try {
+        $html = view('wizard.dati', ['step'=>'dati','steps'=>$steps,'data'=>[],'store'=>$store])->render();
+        return response('VIEW OK — ' . strlen($html) . ' bytes');
+    } catch (\Throwable $e) {
+        return response()->json(['error'=>$e->getMessage(),'file'=>basename($e->getFile()),'line'=>$e->getLine()], 500);
+    }
+});
+
 /*
 |--------------------------------------------------------------------------
 | Tracking pratica cliente
