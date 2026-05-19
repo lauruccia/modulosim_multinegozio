@@ -102,7 +102,7 @@ class Store extends Model
     /** Testo custom con fallback al default */
     public function customText(string $key, string $default = ''): string
     {
-        return data_get($this->custom_texts, $key, $default);
+        return (string) data_get($this->custom_texts ?? [], $key, $default);
     }
 
     /**
