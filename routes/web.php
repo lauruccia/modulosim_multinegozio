@@ -13,10 +13,20 @@ Route::redirect('/', '/attivazione/dati');
 
 // DIAGNOSTICA TEMPORANEA — rimuovere dopo il test
 Route::get('/debug-routes', function () {
-    $all = collect(app('router')->getRoutes())->map(fn($r) => $r->uri());
+    $all = collect(app('router')->getRoutes())->map(function ($r) {
+        return [
+            'methods' => $r->methods(),
+            'uri'     => $r->uri(),
+            'name'    => $r->getName(),
+            'wheres'  => $r->wheres,
+            'middleware' => $r->gatherMiddleware(),
+        ];
+    });
+
     return response()->json([
-        'negozi_routes' => $all->filter(fn($u) => str_contains($u, 'negozi'))->values(),
+        'negozi_routes' => $all->filter(fn($r) => str_contains($r['uri'], 'negozi'))->values(),
         'store_4tacche' => \App\Models\Store::where('slug', '4tacche')->first()?->only(['id','slug','is_active']),
+        'route_cache_exists' => file_exists(base_path('bootstrap/cache/routes-v7.php')),
     ]);
 });
 
@@ -34,6 +44,29 @@ Route::get('/debug-view', function () {
         return response('VIEW OK — ' . strlen($html) . ' bytes');
     } catch (\Throwable $e) {
         return response()->json(['error'=>$e->getMessage(),'file'=>basename($e->getFile()),'line'=>$e->getLine()], 500);
+    }
+});
+
+// Simula il dispatch della rotta /negozi/{slug}/attivazione/dati per capire perché 404
+Route::get('/debug-match/{slug}', function (string $slug) {
+    $url = "/negozi/{$slug}/attivazione/dati";
+    $request = \Illuminate\Http\Request::create($url, 'GET');
+    $routes  = app('router')->getRoutes();
+
+    try {
+        $matched = $routes->match($request);
+        return response()->json([
+            'url' => $url,
+            'matched_uri' => $matched->uri(),
+            'matched_name' => $matched->getName(),
+            'matched_action' => $matched->getActionName(),
+            'parameters' => $matched->parameters(),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'url' => $url,
+            'error' => get_class($e) . ': ' . $e->getMessage(),
+        ], 500);
     }
 });
 
