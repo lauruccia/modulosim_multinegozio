@@ -661,7 +661,7 @@ class ComposerStaticInit53b5d56b3b7e3cbac1713e68c8850f6c
         'App\\Filament\\Widgets\\LatestRequests' => __DIR__ . '/../..' . '/app/Filament/Widgets/LatestRequests.php',
         'App\\Filament\\Widgets\\RequestStats' => __DIR__ . '/../..' . '/app/Filament/Widgets/RequestStats.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
-        'App\\Http\\Controllers\\OptimaWizardController' => __DIR__ . '/../..' . '/app/Http/Controllers/OptimaWizardController.php',
+        'App\\Http\\Controllers\\SharersWizardController' => __DIR__ . '/../..' . '/app/Http/Controllers/SharersWizardController.php',
         'App\\Mail\\AdminNewRequestMail' => __DIR__ . '/../..' . '/app/Mail/AdminNewRequestMail.php',
         'App\\Mail\\CustomerRequestConfirmationMail' => __DIR__ . '/../..' . '/app/Mail/CustomerRequestConfirmationMail.php',
         'App\\Models\\FormSubmission' => __DIR__ . '/../..' . '/app/Models/FormSubmission.php',

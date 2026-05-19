@@ -103,7 +103,7 @@ Se cPanel non offre terminale o strumenti Composer/Artisan, importa il file SQL 
 Il dump locale pronto per phpMyAdmin si trova in:
 
 ```text
-exports/optima_phpmyadmin.sql
+exports/sharers_phpmyadmin.sql
 ```
 
 Questo file non viene pubblicato su GitHub.

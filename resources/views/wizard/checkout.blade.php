@@ -51,7 +51,7 @@
     <div>
         <div style="background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:24px;">
             <h2 style="margin-top:0;">Totale da pagare</h2>
-            <div style="font-size:42px; font-weight:700; color:#2ca9e1; margin:20px 0;">
+            <div style="font-size:42px; font-weight:700; color:#1d1d1b; margin:20px 0;">
                 € {{ number_format($totale, 2, ',', '.') }}
             </div>
 

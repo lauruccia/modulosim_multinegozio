@@ -9,7 +9,7 @@ use App\Mail\AdminNewRequestMail;
 use App\Mail\CustomerRequestConfirmationMail;
 use Illuminate\Support\Facades\Mail;
 
-class OptimaWizardController extends Controller
+class SharersWizardController extends Controller
 {
     private array $steps = ['dati', 'documento', 'contatti', 'indirizzi', 'numero', 'servizi', 'pagamento'];
 
@@ -21,13 +21,13 @@ class OptimaWizardController extends Controller
 
         if ($store) {
             abort_unless($store->is_active, 404);
-            session(['optima_store_id' => $store->id]);
+            session(['sharers_store_id' => $store->id]);
         }
 
         return view("wizard.$step", [
             'step' => $step,
             'steps' => $this->steps,
-            'data' => session('optima_form', []),
+            'data' => session('sharers_form', []),
             'store' => $store,
         ]);
     }
@@ -40,7 +40,7 @@ class OptimaWizardController extends Controller
 
         if ($store) {
             abort_unless($store->is_active, 404);
-            session(['optima_store_id' => $store->id]);
+            session(['sharers_store_id' => $store->id]);
         }
 
         $validated = match ($step) {
@@ -97,9 +97,9 @@ class OptimaWizardController extends Controller
             default => $request->all(),
         };
 
-        $data = session('optima_form', []);
+        $data = session('sharers_form', []);
         $data[$step] = $validated;
-        session(['optima_form' => $data]);
+        session(['sharers_form' => $data]);
 
         if ($step === 'pagamento') {
             return redirect()->route('wizard.checkout');
@@ -110,7 +110,7 @@ class OptimaWizardController extends Controller
 
     public function checkout()
     {
-        $data = session('optima_form', []);
+        $data = session('sharers_form', []);
 
         if (empty($data)) {
             return redirect()->route('wizard.show', ['step' => 'dati']);
@@ -129,7 +129,7 @@ class OptimaWizardController extends Controller
 
     public function pay()
     {
-        $data = session('optima_form', []);
+        $data = session('sharers_form', []);
 
         if (empty($data)) {
             return redirect()->route('wizard.show', ['step' => 'dati']);
@@ -155,14 +155,14 @@ class OptimaWizardController extends Controller
         $this->sendSubmissionEmails($submission);
 
         session(['last_submission_id' => $submission->id]);
-        session()->forget('optima_form');
+        session()->forget('sharers_form');
 
         return redirect()->route('wizard.success');
     }
 
     public function completeOffline()
     {
-        $data = session('optima_form', []);
+        $data = session('sharers_form', []);
 
         if (empty($data)) {
             return redirect()->route('wizard.show', ['step' => 'dati']);
@@ -189,7 +189,7 @@ class OptimaWizardController extends Controller
         $this->sendSubmissionEmails($submission);
 
         session(['last_submission_id' => $submission->id]);
-        session()->forget('optima_form');
+        session()->forget('sharers_form');
 
         return redirect()->route('wizard.offlineSuccess');
     }
@@ -222,9 +222,9 @@ class OptimaWizardController extends Controller
 
     public function reset()
     {
-        session()->forget('optima_form');
+        session()->forget('sharers_form');
         session()->forget('last_submission_id');
-        session()->forget('optima_store_id');
+        session()->forget('sharers_store_id');
 
         return redirect()->route('wizard.show', ['step' => 'dati']);
     }
@@ -277,6 +277,6 @@ class OptimaWizardController extends Controller
 
     private function storeIdForSubmission(): ?int
     {
-        return $this->currentStore()?->id ?? session('optima_store_id');
+        return $this->currentStore()?->id ?? session('sharers_store_id');
     }
 }

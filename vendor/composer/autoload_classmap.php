@@ -35,7 +35,7 @@ return array(
     'App\\Filament\\Widgets\\LatestRequests' => $baseDir . '/app/Filament/Widgets/LatestRequests.php',
     'App\\Filament\\Widgets\\RequestStats' => $baseDir . '/app/Filament/Widgets/RequestStats.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
-    'App\\Http\\Controllers\\OptimaWizardController' => $baseDir . '/app/Http/Controllers/OptimaWizardController.php',
+    'App\\Http\\Controllers\\SharersWizardController' => $baseDir . '/app/Http/Controllers/SharersWizardController.php',
     'App\\Mail\\AdminNewRequestMail' => $baseDir . '/app/Mail/AdminNewRequestMail.php',
     'App\\Mail\\CustomerRequestConfirmationMail' => $baseDir . '/app/Mail/CustomerRequestConfirmationMail.php',
     'App\\Models\\FormSubmission' => $baseDir . '/app/Models/FormSubmission.php',

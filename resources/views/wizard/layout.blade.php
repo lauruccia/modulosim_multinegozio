@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attivazione SIM</title>
+    <title>Sharers - Attivazione SIM</title>
     <style>
         body{
             margin:0;
@@ -19,7 +19,14 @@
         .logo{
             font-size:32px;
             font-weight:700;
-            color:#19a7e0;
+            display:flex;
+            align-items:center;
+        }
+        .logo img{
+            display:block;
+            width:260px;
+            max-width:70vw;
+            height:auto;
         }
         .container{
             max-width:1100px;
@@ -52,8 +59,8 @@
             font-weight:700;
         }
         .step.active{
-            border-color:#1db5ea;
-            background:#1db5ea;
+            border-color:#dddc00;
+            background:#dddc00;
             color:#fff;
         }
         h1{
@@ -84,7 +91,7 @@
             outline:none;
         }
         .field input:focus, .field select:focus{
-            border-bottom-color:#1db5ea;
+            border-bottom-color:#dddc00;
         }
         .full{
             grid-column:1 / -1;
@@ -116,8 +123,9 @@
             border:1px solid #d1d5db;
         }
         .btn-next{
-            background:#61c7f0;
-            color:#fff;
+            background:#dddc00;
+            color:#1d1d1b;
+            font-weight:700;
         }
         .error{
             color:#dc2626;
@@ -139,7 +147,9 @@
 </head>
 <body>
     <div class="topbar">
-        <div class="logo">OPTIMA</div>
+        <a class="logo" href="{{ url('/') }}" aria-label="Sharers">
+            <img src="{{ asset('images/sharers-logo.jpg') }}" alt="Sharers">
+        </a>
     </div>
 
     <div class="container">

@@ -29,8 +29,8 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('Sharers')
-            ->brandLogo(asset('images/sharers-logo.png'))
-            ->favicon(asset('images/sharers-favicon.png'))
+            ->brandLogo(asset('images/sharers-logo.jpg'))
+            ->favicon(asset('images/sharers-logo.jpg'))
             ->colors([
                 'primary' => Color::hex('#DDDC00'),
             ])
