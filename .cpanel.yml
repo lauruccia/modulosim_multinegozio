@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/shars/public_html/
+    - /bin/cp -R public/. $DEPLOYPATH
+    - /bin/cp cpanel-public-index.php ${DEPLOYPATH}index.php

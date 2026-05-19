@@ -54,6 +54,35 @@ MAIL_FROM_NAME="${APP_NAME}"
 FORM_ADMIN_EMAIL=tua-email-amministrazione@dominio.it
 ```
 
+## Deploy con document root bloccato su public_html
+
+Su questo hosting il document root e' bloccato su:
+
+```text
+/home/shars/public_html
+```
+
+Per questo il repository resta clonato in:
+
+```text
+/home/shars/repositories/modulosim_multinegozio
+```
+
+Il file `.cpanel.yml` copia automaticamente i file pubblici Laravel dentro `public_html` e sostituisce `public_html/index.php` con una versione compatibile che carica l'applicazione dalla cartella `repositories/modulosim_multinegozio`.
+
+Questa e' la struttura corretta:
+
+```text
+/home/shars/public_html/index.php
+/home/shars/public_html/.htaccess
+/home/shars/repositories/modulosim_multinegozio/app
+/home/shars/repositories/modulosim_multinegozio/bootstrap
+/home/shars/repositories/modulosim_multinegozio/vendor
+/home/shars/repositories/modulosim_multinegozio/.env
+```
+
+Non copiare tutta Laravel dentro `public_html`.
+
 ## Dopo il primo deploy
 
 Da cPanel, se disponibile, esegui:
@@ -71,13 +100,7 @@ Se cPanel non offre terminale o strumenti Composer/Artisan, serve abilitare una 
 
 ## Document root
 
-Il document root del dominio deve puntare alla cartella `public` del progetto Laravel, non alla root del repository.
-
-Esempio:
-
-```text
-/home/utente/repositories/modulosim_multinegozio/public
-```
+Il document root resta `public_html`. La compatibilita' e' gestita da `.cpanel.yml` e da `cpanel-public-index.php`.
 
 ## Primo accesso
 
