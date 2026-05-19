@@ -11,6 +11,15 @@ use Illuminate\Support\Facades\Route;
 */
 Route::redirect('/', '/attivazione/dati');
 
+// DIAGNOSTICA TEMPORANEA — rimuovere dopo il test
+Route::get('/debug-routes', function () {
+    $all = collect(app('router')->getRoutes())->map(fn($r) => $r->uri());
+    return response()->json([
+        'negozi_routes' => $all->filter(fn($u) => str_contains($u, 'negozi'))->values(),
+        'store_4tacche' => \App\Models\Store::where('slug', '4tacche')->first()?->only(['id','slug','is_active']),
+    ]);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Tracking pratica cliente
