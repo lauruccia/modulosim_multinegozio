@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CommissionResource\Pages;
+use App\Models\CommissionRule;
 use App\Models\FormSubmission;
 use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
@@ -28,6 +29,7 @@ class CommissionResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with('store')
+            ->with('commissionRule')
             ->visibleTo(Auth::user())
             ->where('commission_status', '!=', 'non_maturata');
     }
@@ -60,10 +62,14 @@ class CommissionResource extends Resource
             InfoSection::make('Commissione')
                 ->schema([
                     TextEntry::make('store.name')->label('Negozio')->placeholder('-'),
+                    TextEntry::make('service_type')
+                        ->label('Servizio')
+                        ->formatStateUsing(fn (?string $state): ?string => CommissionRule::serviceOptions()[$state] ?? $state),
                     TextEntry::make('customer_name')->label('Cliente'),
                     TextEntry::make('activation_status')->label('Stato attivazione'),
                     TextEntry::make('activated_at')->label('Data attivazione')->dateTime('d/m/Y H:i')->placeholder('-'),
                     TextEntry::make('commission_amount')->label('Importo')->money('EUR'),
+                    TextEntry::make('commissionRule.name')->label('Regola')->placeholder('-'),
                     TextEntry::make('commission_status')->label('Stato'),
                     TextEntry::make('commission_confirmed_at')->label('Confermata il')->dateTime('d/m/Y H:i')->placeholder('-'),
                     TextEntry::make('commission_paid_at')->label('Liquidata il')->dateTime('d/m/Y H:i')->placeholder('-'),
@@ -90,6 +96,12 @@ class CommissionResource extends Resource
                     ->label('Cliente')
                     ->searchable()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('service_type')
+                    ->label('Servizio')
+                    ->formatStateUsing(fn (?string $state): ?string => CommissionRule::serviceOptions()[$state] ?? $state)
+                    ->badge()
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('commission_amount')
                     ->label('Importo')

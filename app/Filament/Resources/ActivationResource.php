@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivationResource\Pages;
+use App\Models\CommissionRule;
 use App\Models\FormSubmission;
 use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
@@ -28,6 +29,7 @@ class ActivationResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with('store')
+            ->with('commissionRule')
             ->visibleTo(Auth::user())
             ->where('activation_status', 'attivata');
     }
@@ -60,12 +62,16 @@ class ActivationResource extends Resource
             InfoSection::make('Attivazione')
                 ->schema([
                     TextEntry::make('store.name')->label('Negozio')->placeholder('-'),
+                    TextEntry::make('service_type')
+                        ->label('Servizio')
+                        ->formatStateUsing(fn (?string $state): ?string => CommissionRule::serviceOptions()[$state] ?? $state),
                     TextEntry::make('customer_name')->label('Cliente'),
                     TextEntry::make('customer_email')->label('Email'),
                     TextEntry::make('customer_phone')->label('Telefono'),
                     TextEntry::make('activated_at')->label('Data attivazione')->dateTime('d/m/Y H:i')->placeholder('-'),
                     TextEntry::make('total_amount')->label('Totale')->money('EUR'),
                     TextEntry::make('commission_amount')->label('Commissione')->money('EUR'),
+                    TextEntry::make('commissionRule.name')->label('Regola commissione')->placeholder('-'),
                     TextEntry::make('commission_status')->label('Stato commissione'),
                 ])
                 ->columns(2),
@@ -90,6 +96,12 @@ class ActivationResource extends Resource
                     ->label('Cliente')
                     ->searchable()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('service_type')
+                    ->label('Servizio')
+                    ->formatStateUsing(fn (?string $state): ?string => CommissionRule::serviceOptions()[$state] ?? $state)
+                    ->badge()
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('activated_at')
                     ->label('Attivata il')

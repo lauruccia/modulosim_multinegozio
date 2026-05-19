@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\FormSubmissionResource\Pages;
+use App\Models\CommissionRule;
 use App\Models\FormSubmission;
 use App\Models\Store;
 use Filament\Forms;
@@ -30,6 +31,7 @@ class FormSubmissionResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with('store')
+            ->with('commissionRule')
             ->visibleTo(Auth::user());
     }
 
@@ -76,6 +78,12 @@ class FormSubmissionResource extends Resource
                         ->searchable()
                         ->preload()
                         ->visible(fn () => Auth::user()?->isAdmin() ?? false)
+                        ->required(),
+
+                    Forms\Components\Select::make('service_type')
+                        ->label('Servizio')
+                        ->options(CommissionRule::serviceOptions())
+                        ->default('sim')
                         ->required(),
 
                     Forms\Components\TextInput::make('customer_name')
@@ -143,7 +151,16 @@ class FormSubmissionResource extends Resource
                     Forms\Components\TextInput::make('commission_amount')
                         ->label('Commissione')
                         ->numeric()
-                        ->prefix('€'),
+                        ->prefix('€')
+                        ->helperText('Se esiste una regola attiva, viene ricalcolata quando la pratica passa ad attivata.'),
+
+                    Forms\Components\Select::make('commission_rule_id')
+                        ->label('Regola applicata')
+                        ->relationship('commissionRule', 'name')
+                        ->searchable()
+                        ->preload()
+                        ->disabled()
+                        ->dehydrated(false),
 
                     Forms\Components\Select::make('commission_status')
                         ->label('Stato commissione')
@@ -307,6 +324,9 @@ class FormSubmissionResource extends Resource
         InfoSection::make('Dati principali')
             ->schema([
                 TextEntry::make('store.name')->label('Negozio')->placeholder('-'),
+                TextEntry::make('service_type')
+                    ->label('Servizio')
+                    ->formatStateUsing(fn (?string $state): ?string => CommissionRule::serviceOptions()[$state] ?? $state),
                 TextEntry::make('customer_name')->label('Nome cliente'),
                 TextEntry::make('customer_email')->label('Email'),
                 TextEntry::make('customer_phone')->label('Telefono'),
@@ -340,6 +360,7 @@ class FormSubmissionResource extends Resource
                 TextEntry::make('activation_status')->label('Stato attivazione'),
                 TextEntry::make('activated_at')->label('Data attivazione')->dateTime('d/m/Y H:i')->placeholder('-'),
                 TextEntry::make('commission_amount')->label('Commissione')->money('EUR'),
+                TextEntry::make('commissionRule.name')->label('Regola commissione')->placeholder('-'),
                 TextEntry::make('commission_status')->label('Stato commissione'),
                 TextEntry::make('commission_confirmed_at')->label('Confermata il')->dateTime('d/m/Y H:i')->placeholder('-'),
                 TextEntry::make('commission_paid_at')->label('Liquidata il')->dateTime('d/m/Y H:i')->placeholder('-'),
@@ -483,6 +504,12 @@ class FormSubmissionResource extends Resource
                     ->wrap()
                     ->limit(30),
 
+                Tables\Columns\TextColumn::make('service_type')
+                    ->label('Servizio')
+                    ->formatStateUsing(fn (?string $state): ?string => CommissionRule::serviceOptions()[$state] ?? $state)
+                    ->badge()
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('customer_email')
                     ->label('Email')
                     ->searchable()
@@ -604,6 +631,10 @@ class FormSubmissionResource extends Resource
                         'completata' => 'Completata',
                         'annullata' => 'Annullata',
                     ]),
+
+                Tables\Filters\SelectFilter::make('service_type')
+                    ->label('Servizio')
+                    ->options(CommissionRule::serviceOptions()),
 
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->label('Stato pagamento')

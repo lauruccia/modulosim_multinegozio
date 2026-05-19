@@ -114,6 +114,12 @@ exports/sharers_phpmyadmin.sql
 
 Questo file non viene pubblicato su GitHub.
 
+Per aggiornare un database gia' creato con report negozi e regole commissioni, importa invece:
+
+```text
+exports/sharers_update_reports_commissions.sql
+```
+
 ## Document root
 
 Il document root resta `public_html`. La compatibilita' e' gestita da `.cpanel.yml` e da `cpanel-public-index.php`.

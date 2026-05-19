@@ -140,6 +140,7 @@ class SharersWizardController extends Controller
         $submission = FormSubmission::create([
             'store_id'        => $this->storeIdForSubmission(),
             'source'          => $this->storeIdForSubmission() ? 'store_link' : 'public',
+            'service_type'    => 'sim',
             'customer_name'  => trim(($data['dati']['nome'] ?? '') . ' ' . ($data['dati']['cognome'] ?? '')),
             'customer_email' => $data['contatti']['email'] ?? null,
             'customer_phone' => $data['contatti']['cellulare'] ?? null,
@@ -174,6 +175,7 @@ class SharersWizardController extends Controller
         $submission = FormSubmission::create([
             'store_id'        => $this->storeIdForSubmission(),
             'source'          => $this->storeIdForSubmission() ? 'store_link' : 'public',
+            'service_type'    => 'sim',
             'customer_name'  => trim(($data['dati']['nome'] ?? '') . ' ' . ($data['dati']['cognome'] ?? '')),
             'customer_email' => $data['contatti']['email'] ?? null,
             'customer_phone' => $data['contatti']['cellulare'] ?? null,

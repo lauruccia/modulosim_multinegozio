@@ -24,27 +24,27 @@ class StoreResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function canAccess(): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function canViewAny(): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function canEdit(Model $record): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function canDelete(Model $record): bool

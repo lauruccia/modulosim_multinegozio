@@ -24,27 +24,33 @@ class UserResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function canAccess(): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function canViewAny(): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function canEdit(Model $record): bool
     {
-        return Auth::user()?->isSuperAdmin() ?? false;
+        $user = Auth::user();
+
+        if (! $user?->isAdmin()) {
+            return false;
+        }
+
+        return $user->isSuperAdmin() || $record->role !== 'super_admin';
     }
 
     public static function canDelete(Model $record): bool
@@ -86,6 +92,7 @@ class UserResource extends Resource
                     'admin' => 'Amministratore',
                     'store' => 'Negozio',
                 ])
+                ->disableOptionWhen(fn (string $value): bool => $value === 'super_admin' && ! (Auth::user()?->isSuperAdmin() ?? false))
                 ->required()
                 ->live(),
 
