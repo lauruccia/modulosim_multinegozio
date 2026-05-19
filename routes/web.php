@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OptimaWizardController;
 
+Route::redirect('/', '/attivazione/dati');
+
 Route::prefix('negozi/{store:slug}/attivazione')->name('stores.wizard.')->group(function () {
     Route::get('{step}', [OptimaWizardController::class, 'show'])
         ->whereIn('step', ['dati', 'documento', 'contatti', 'indirizzi', 'numero', 'servizi', 'pagamento'])
