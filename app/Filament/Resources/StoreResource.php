@@ -142,6 +142,10 @@ class StoreResource extends Resource
                     ->counts('formSubmissions')
                     ->sortable(),
             ])
+            ->filters([
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Attivo'),
+            ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Modifica'),
             ])

@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ActivationResource\Pages;
 use App\Models\CommissionRule;
 use App\Models\FormSubmission;
+use App\Models\Store;
+use Filament\Forms;
 use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -119,6 +121,37 @@ class ActivationResource extends Resource
                     ->sortable(),
             ])
             ->defaultSort('activated_at', 'desc')
+            ->filters([
+                Tables\Filters\SelectFilter::make('store_id')
+                    ->label('Negozio')
+                    ->options(fn () => Store::query()->orderBy('name')->pluck('name', 'id')->all())
+                    ->searchable()
+                    ->visible(fn () => Auth::user()?->isAdmin() ?? false),
+
+                Tables\Filters\SelectFilter::make('service_type')
+                    ->label('Servizio')
+                    ->options(CommissionRule::serviceOptions()),
+
+                Tables\Filters\SelectFilter::make('commission_status')
+                    ->label('Stato commissione')
+                    ->options([
+                        'non_maturata' => 'Non maturata',
+                        'maturata' => 'Maturata',
+                        'confermata' => 'Confermata',
+                        'liquidata' => 'Liquidata',
+                        'stornata' => 'Stornata',
+                    ]),
+
+                Tables\Filters\Filter::make('activated_at')
+                    ->label('Periodo attivazione')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')->label('Dal'),
+                        Forms\Components\DatePicker::make('until')->label('Al'),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query
+                        ->when($data['from'] ?? null, fn (Builder $query, string $date): Builder => $query->whereDate('activated_at', '>=', $date))
+                        ->when($data['until'] ?? null, fn (Builder $query, string $date): Builder => $query->whereDate('activated_at', '<=', $date))),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label('Apri'),
             ]);

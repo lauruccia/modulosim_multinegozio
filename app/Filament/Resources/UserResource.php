@@ -135,6 +135,21 @@ class UserResource extends Resource
                     ->placeholder('-')
                     ->searchable(),
             ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('role')
+                    ->label('Ruolo')
+                    ->options([
+                        'super_admin' => 'Superamministratore',
+                        'admin' => 'Amministratore',
+                        'store' => 'Negozio',
+                    ]),
+
+                Tables\Filters\SelectFilter::make('store_id')
+                    ->label('Negozio')
+                    ->relationship('store', 'name')
+                    ->searchable()
+                    ->preload(),
+            ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Modifica'),
             ])

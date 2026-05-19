@@ -123,6 +123,18 @@ class CommissionRuleResource extends Resource
                     ->label('Attiva')
                     ->boolean(),
             ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('service_type')
+                    ->label('Servizio')
+                    ->options(CommissionRule::serviceOptions()),
+
+                Tables\Filters\SelectFilter::make('trigger_status')
+                    ->label('Evento')
+                    ->options(CommissionRule::triggerOptions()),
+
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Attiva'),
+            ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Modifica'),
                 Tables\Actions\DeleteAction::make()

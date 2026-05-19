@@ -663,6 +663,16 @@ class FormSubmissionResource extends Resource
                         'liquidata' => 'Liquidata',
                         'stornata' => 'Stornata',
                     ]),
+
+                Tables\Filters\Filter::make('created_at')
+                    ->label('Periodo richiesta')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')->label('Dal'),
+                        Forms\Components\DatePicker::make('until')->label('Al'),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query
+                        ->when($data['from'] ?? null, fn (Builder $query, string $date): Builder => $query->whereDate('created_at', '>=', $date))
+                        ->when($data['until'] ?? null, fn (Builder $query, string $date): Builder => $query->whereDate('created_at', '<=', $date))),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label('Apri'),
