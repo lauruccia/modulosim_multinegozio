@@ -1,7 +1,15 @@
 ---
 deployment:
   tasks:
+    # Permessi storage e cache
     - /bin/chmod -R 775 /home/shars/repositories/modulosim_multinegozio/storage
     - /bin/chmod -R 775 /home/shars/repositories/modulosim_multinegozio/bootstrap/cache
-    - /bin/cp -R public/. /home/shars/public_html/
-    - /bin/cp cpanel-public-index.php /home/shars/public_html/index.php
+
+    # Copia public/ in public_html
+    - /bin/cp -R /home/shars/repositories/modulosim_multinegozio/public/. /home/shars/public_html/
+    - /bin/cp /home/shars/repositories/modulosim_multinegozio/cpanel-public-index.php /home/shars/public_html/index.php
+
+    # Laravel: migration, cache, storage link
+    - /usr/local/bin/php /home/shars/repositories/modulosim_multinegozio/artisan migrate --force --no-interaction
+    - /usr/local/bin/php /home/shars/repositories/modulosim_multinegozio/artisan optimize:clear
+    - /usr/local/bin/php /home/shars/repositories/modulosim_multinegozio/artisan storage:link --force
