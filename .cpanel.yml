@@ -1,5 +1,7 @@
 ---
 deployment:
   tasks:
+    - /bin/chmod -R 775 /home/shars/repositories/modulosim_multinegozio/storage
+    - /bin/chmod -R 775 /home/shars/repositories/modulosim_multinegozio/bootstrap/cache
     - /bin/cp -R public/. /home/shars/public_html/
     - /bin/cp cpanel-public-index.php /home/shars/public_html/index.php

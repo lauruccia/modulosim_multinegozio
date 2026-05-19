@@ -30,7 +30,13 @@ In cPanel:
 
 ## Configurazione Laravel sul server
 
-Nel file `.env` del server imposta almeno:
+Il file `.env` deve stare nella cartella del repository Laravel, non in `public_html`:
+
+```text
+/home/shars/repositories/modulosim_multinegozio/.env
+```
+
+Puoi partire dal contenuto di `cpanel-env-template.txt`. Nel file `.env` del server imposta almeno:
 
 ```env
 APP_NAME=Sharers
