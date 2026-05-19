@@ -2,23 +2,21 @@
 
 namespace App\Providers;
 
+use App\Models\FormSubmission;
+use App\Observers\SubmissionObserver;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        // Registra l'observer che crea eventi automatici al cambio stato pratica
+        FormSubmission::observe(SubmissionObserver::class);
     }
 }

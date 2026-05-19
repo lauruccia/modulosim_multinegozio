@@ -8,9 +8,11 @@ use App\Models\FormSubmission;
 use App\Models\Store;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -364,6 +366,14 @@ class FormSubmissionResource extends Resource
                 TextEntry::make('commission_status')->label('Stato commissione'),
                 TextEntry::make('commission_confirmed_at')->label('Confermata il')->dateTime('d/m/Y H:i')->placeholder('-'),
                 TextEntry::make('commission_paid_at')->label('Liquidata il')->dateTime('d/m/Y H:i')->placeholder('-'),
+                TextEntry::make('tracking_url')
+                    ->label('Link tracking cliente')
+                    ->placeholder('—')
+                    ->copyable()
+                    ->copyMessage('Link copiato!')
+                    ->url(fn (FormSubmission $record): ?string => $record->tracking_url)
+                    ->openUrlInNewTab()
+                    ->columnSpanFull(),
             ])
             ->columns(2),
 
@@ -478,6 +488,32 @@ class FormSubmissionResource extends Resource
                     ->formatStateUsing(fn ($state) => $state ? 'Sì' : 'No'),
             ])
             ->columns(2),
+
+        InfoSection::make('Storico pratica')
+            ->description('Aggiornamenti visibili al cliente nella pagina di tracking.')
+            ->icon('heroicon-o-clock')
+            ->schema([
+                RepeatableEntry::make('events')
+                    ->label('')
+                    ->schema([
+                        TextEntry::make('occurred_at')
+                            ->label('Data')
+                            ->dateTime('d/m/Y H:i')
+                            ->weight(\Filament\Support\Enums\FontWeight::Medium),
+                        TextEntry::make('title')
+                            ->label('Titolo')
+                            ->weight(\Filament\Support\Enums\FontWeight::Bold),
+                        TextEntry::make('description')
+                            ->label('Descrizione')
+                            ->placeholder('—'),
+                        TextEntry::make('is_visible_to_customer')
+                            ->label('Visibile al cliente')
+                            ->badge()
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Sì' : 'Solo interno')
+                            ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
+                    ])
+                    ->columns(4),
+            ]),
     ]);
 }
 
@@ -676,6 +712,53 @@ class FormSubmissionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label('Apri'),
+
+                Tables\Actions\Action::make('aggiungi_nota')
+                    ->label('Nota')
+                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->color('gray')
+                    ->visible(fn () => Auth::user()?->isAdmin() ?? false)
+                    ->form([
+                        Forms\Components\Select::make('event_type')
+                            ->label('Tipo aggiornamento')
+                            ->options([
+                                'nota'           => '💬 Nota interna',
+                                'in_lavorazione' => '⚙️ Presa in carico',
+                                'attivata'       => '✅ Attivazione completata',
+                                'respinta'       => '❌ Pratica respinta',
+                                'annullata'      => '🚫 Pratica annullata',
+                            ])
+                            ->required()
+                            ->default('nota'),
+
+                        Forms\Components\TextInput::make('title')
+                            ->label('Titolo')
+                            ->required()
+                            ->maxLength(200),
+
+                        Forms\Components\Textarea::make('description')
+                            ->label('Descrizione (opzionale)')
+                            ->rows(3)
+                            ->maxLength(1000),
+
+                        Forms\Components\Toggle::make('is_visible_to_customer')
+                            ->label('Visibile al cliente nella pagina tracking')
+                            ->default(true),
+                    ])
+                    ->action(function (FormSubmission $record, array $data): void {
+                        $record->addEvent(
+                            eventType: $data['event_type'],
+                            title: $data['title'],
+                            description: $data['description'] ?? null,
+                            visibleToCustomer: (bool)($data['is_visible_to_customer'] ?? true),
+                        );
+
+                        Notification::make()
+                            ->title('Nota aggiunta')
+                            ->success()
+                            ->send();
+                    }),
+
                 Tables\Actions\EditAction::make()
                     ->label('Modifica')
                     ->visible(fn () => Auth::user()?->isAdmin() ?? false),

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\CommissionsByService;
 use App\Filament\Widgets\LatestRequests;
 use App\Filament\Widgets\RequestStats;
 use Filament\Pages\Dashboard as BaseDashboard;
@@ -16,6 +17,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             RequestStats::class,
+            CommissionsByService::class,
             LatestRequests::class,
         ];
     }

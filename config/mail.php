@@ -115,4 +115,11 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Destinatario admin notifiche nuove pratiche
+    |--------------------------------------------------------------------------
+    */
+    'admin_to' => env('FORM_ADMIN_EMAIL'),
+
 ];

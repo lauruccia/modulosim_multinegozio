@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Alias per il middleware di risoluzione custom domain
+        $middleware->alias([
+            'resolve.custom.domain' => \App\Http\Middleware\ResolveCustomDomain::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

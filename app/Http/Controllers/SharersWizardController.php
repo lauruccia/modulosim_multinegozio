@@ -251,17 +251,17 @@ class SharersWizardController extends Controller
     }
 
     private function sendSubmissionEmails(FormSubmission $submission): void
-{
-    $adminEmail = env('FORM_ADMIN_EMAIL');
+    {
+        $adminEmail = config('mail.admin_to', env('FORM_ADMIN_EMAIL'));
 
-    if ($adminEmail) {
-        Mail::to($adminEmail)->send(new AdminNewRequestMail($submission));
-    }
+        if ($adminEmail) {
+            Mail::to($adminEmail)->send(new AdminNewRequestMail($submission));
+        }
 
-    if ($submission->customer_email) {
-        Mail::to($submission->customer_email)->send(new CustomerRequestConfirmationMail($submission));
+        if ($submission->customer_email) {
+            Mail::to($submission->customer_email)->send(new CustomerRequestConfirmationMail($submission));
+        }
     }
-}
 
     private function nextStep(string $current): string
     {
@@ -272,9 +272,19 @@ class SharersWizardController extends Controller
 
     private function currentStore(): ?Store
     {
+        // 1. Route model binding (URL /negozi/{slug}/attivazione/...)
         $store = request()->route('store');
+        if ($store instanceof Store) {
+            return $store;
+        }
 
-        return $store instanceof Store ? $store : null;
+        // 2. Custom domain risolto dal middleware ResolveCustomDomain
+        $fromDomain = request()->attributes->get('resolved_store');
+        if ($fromDomain instanceof Store) {
+            return $fromDomain;
+        }
+
+        return null;
     }
 
     private function storeIdForSubmission(): ?int
