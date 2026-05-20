@@ -130,8 +130,6 @@ class CommissionResource extends Resource
 
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')->label('#')->sortable()->visible($isAdmin),
-
                 Tables\Columns\TextColumn::make('store.name')
                     ->label('Negozio')
                     ->visible($isAdmin)
@@ -213,11 +211,11 @@ class CommissionResource extends Resource
                         ->when($data['until'] ?? null, fn ($query, $d) => $query->whereDate('commission_confirmed_at', '<=', $d))),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->label('Apri'),
+                Tables\Actions\ViewAction::make()->label('')->tooltip('Apri')->icon('heroicon-o-eye'),
 
                 /* ─── STORE: richiedi liquidazione singola ─── */
                 Tables\Actions\Action::make('richiedi_liquidazione')
-                    ->label('Richiedi pagamento')
+                    ->label('')->tooltip('Richiedi pagamento')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->color('warning')
                     ->requiresConfirmation()
@@ -232,7 +230,7 @@ class CommissionResource extends Resource
 
                 /* ─── ADMIN: segna pagata singola ─── */
                 Tables\Actions\Action::make('segna_pagata')
-                    ->label('Segna come pagata')
+                    ->label('')->tooltip('Segna come pagata')
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
                     ->requiresConfirmation()
@@ -248,7 +246,7 @@ class CommissionResource extends Resource
 
                 /* ─── SUPERADMIN: storno/correzione eccezionale ─── */
                 Tables\Actions\Action::make('storna_commissione')
-                    ->label('Storna (eccezionale)')
+                    ->label('')->tooltip('Storno eccezionale')
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('danger')
                     ->visible(fn (FormSubmission $r): bool =>

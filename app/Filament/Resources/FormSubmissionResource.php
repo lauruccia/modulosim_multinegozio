@@ -36,7 +36,7 @@ class FormSubmissionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['store', 'commissionRule'])
+            ->with('store')
             ->visibleTo(Auth::user());
     }
 
