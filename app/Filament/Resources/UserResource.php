@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,6 +22,18 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'Utenti';
     protected static ?string $modelLabel = 'Utente';
     protected static ?string $pluralModelLabel = 'Utenti';
+
+    /* Nasconde i super_admin a chi non è superadmin */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (! (Auth::user()?->isSuperAdmin() ?? false)) {
+            $query->where('role', '!=', 'super_admin');
+        }
+
+        return $query;
+    }
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -87,12 +100,13 @@ class UserResource extends Resource
 
             Forms\Components\Select::make('role')
                 ->label('Ruolo')
-                ->options([
-                    'super_admin' => 'Superamministratore',
-                    'admin' => 'Amministratore',
-                    'store' => 'Negozio',
-                ])
-                ->disableOptionWhen(fn (string $value): bool => $value === 'super_admin' && ! (Auth::user()?->isSuperAdmin() ?? false))
+                ->options(function (): array {
+                    $options = ['admin' => 'Amministratore', 'store' => 'Negozio'];
+                    if (Auth::user()?->isSuperAdmin()) {
+                        $options = ['super_admin' => 'Superamministratore'] + $options;
+                    }
+                    return $options;
+                })
                 ->required()
                 ->live(),
 
@@ -138,11 +152,13 @@ class UserResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('role')
                     ->label('Ruolo')
-                    ->options([
-                        'super_admin' => 'Superamministratore',
-                        'admin' => 'Amministratore',
-                        'store' => 'Negozio',
-                    ]),
+                    ->options(function (): array {
+                        $options = ['admin' => 'Amministratore', 'store' => 'Negozio'];
+                        if (Auth::user()?->isSuperAdmin()) {
+                            $options = ['super_admin' => 'Superamministratore'] + $options;
+                        }
+                        return $options;
+                    }),
 
                 Tables\Filters\SelectFilter::make('store_id')
                     ->label('Negozio')
