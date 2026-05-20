@@ -19,6 +19,8 @@ class Store extends Model
         'email',
         'phone',
         'commission_rate',
+        'iban',
+        'bank_account_holder',
         'is_active',
         // branding
         'logo_path',

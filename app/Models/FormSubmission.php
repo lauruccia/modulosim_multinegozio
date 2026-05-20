@@ -162,15 +162,17 @@ class FormSubmission extends Model
 
     /**
      * Crea un evento di sistema sulla pratica.
-     * Usato dall'Observer e dalle azioni Filament.
+     * Registra automaticamente l'utente loggato per l'audit log.
      */
     public function addEvent(
         string $eventType,
         string $title,
         ?string $description = null,
-        bool $visibleToCustomer = true
+        bool $visibleToCustomer = true,
+        ?int $performedByUserId = null,
     ): SubmissionEvent {
         return $this->events()->create([
+            'performed_by_user_id'   => $performedByUserId ?? \Illuminate\Support\Facades\Auth::id(),
             'event_type'             => $eventType,
             'title'                  => $title,
             'description'            => $description,

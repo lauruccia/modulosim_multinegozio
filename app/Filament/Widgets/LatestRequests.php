@@ -10,18 +10,21 @@ use Illuminate\Support\Facades\Auth;
 
 class LatestRequests extends BaseWidget
 {
-    protected static ?string $heading = 'Ultime richieste';
-
-    protected int | string | array $columnSpan = 'full';
+    protected static ?string $heading = 'Ultime pratiche';
+    protected static ?int    $sort    = 3;
+    protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
+        $isAdmin = Auth::user()?->isAdmin() ?? false;
+
         return $table
-            ->query(FormSubmission::query()->with('store')->visibleTo(Auth::user())->latest())
+            ->query(FormSubmission::query()->with('store')->visibleTo(Auth::user())->latest()->limit(10))
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('#')
-                    ->sortable(),
+                    ->sortable()
+                    ->visible($isAdmin),
 
                 Tables\Columns\TextColumn::make('customer_name')
                     ->label('Cliente')
@@ -29,50 +32,65 @@ class LatestRequests extends BaseWidget
 
                 Tables\Columns\TextColumn::make('store.name')
                     ->label('Negozio')
-                    ->visible(fn () => Auth::user()?->isAdmin() ?? false),
+                    ->visible($isAdmin),
 
                 Tables\Columns\TextColumn::make('customer_email')
                     ->label('Email')
-                    ->searchable(),
+                    ->searchable()
+                    ->visible($isAdmin),
 
                 Tables\Columns\TextColumn::make('customer_phone')
                     ->label('Telefono')
                     ->searchable(),
 
-                Tables\Columns\BadgeColumn::make('status')
+                Tables\Columns\TextColumn::make('service_type')
+                    ->label('Servizio')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                        'sim'       => 'SIM',
+                        'luce'      => 'Luce',
+                        'gas'       => 'Gas',
+                        'luce_gas'  => 'Luce + Gas',
+                        default     => ucfirst($state ?? ''),
+                    })
+                    ->color('gray'),
+
+                Tables\Columns\TextColumn::make('activation_status')
                     ->label('Stato pratica')
-                    ->colors([
-                        'gray' => 'bozza',
-                        'warning' => 'nuova',
-                        'primary' => 'in_lavorazione',
-                        'success' => 'completata',
-                        'danger' => 'annullata',
-                    ]),
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                        'richiesta'      => 'Nuova richiesta',
+                        'in_lavorazione' => 'In lavorazione',
+                        'attivata'       => 'Attivata',
+                        'respinta'       => 'Respinta',
+                        'annullata'      => 'Annullata',
+                        default          => $state,
+                    })
+                    ->color(fn (?string $state) => match ($state) {
+                        'richiesta'      => 'warning',
+                        'in_lavorazione' => 'primary',
+                        'attivata'       => 'success',
+                        'respinta',
+                        'annullata'      => 'danger',
+                        default          => 'gray',
+                    }),
 
-                Tables\Columns\BadgeColumn::make('payment_status')
+                Tables\Columns\TextColumn::make('payment_status')
                     ->label('Pagamento')
-                    ->colors([
-                        'warning' => 'pending',
-                        'success' => 'paid',
-                        'danger' => 'failed',
-                    ]),
-
-                Tables\Columns\BadgeColumn::make('activation_status')
-                    ->label('Attivazione')
-                    ->colors([
-                        'gray' => 'richiesta',
-                        'primary' => 'in_lavorazione',
-                        'success' => 'attivata',
-                        'danger' => ['respinta', 'annullata'],
-                    ]),
-
-                Tables\Columns\TextColumn::make('total_amount')
-                    ->label('Totale')
-                    ->money('EUR'),
-
-                Tables\Columns\TextColumn::make('commission_amount')
-                    ->label('Commissione')
-                    ->money('EUR'),
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                        'pending' => 'In attesa',
+                        'paid'    => 'Pagato',
+                        'failed'  => 'Non riuscito',
+                        default   => $state,
+                    })
+                    ->color(fn (?string $state) => match ($state) {
+                        'paid'    => 'success',
+                        'pending' => 'warning',
+                        'failed'  => 'danger',
+                        default   => 'gray',
+                    })
+                    ->visible($isAdmin),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Data')
@@ -82,8 +100,12 @@ class LatestRequests extends BaseWidget
             ->actions([
                 Tables\Actions\Action::make('apri')
                     ->label('Apri')
-                    ->url(fn (FormSubmission $record): string => route('filament.admin.resources.form-submissions.edit', ['record' => $record])),
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->url(fn (FormSubmission $record): string =>
+                        \App\Filament\Resources\FormSubmissionResource::getUrl('view', ['record' => $record]))
+                    ->openUrlInNewTab(),
             ])
-            ->paginated([5]);
+            ->paginated([5, 10])
+            ->defaultPaginationPageOption(5);
     }
 }

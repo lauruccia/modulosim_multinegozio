@@ -21,11 +21,13 @@ class ActivationResource extends Resource
 {
     protected static ?string $model = FormSubmission::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-check-badge';
-    protected static ?string $navigationLabel = 'Attivazioni';
-    protected static ?string $modelLabel = 'Attivazione';
-    protected static ?string $pluralModelLabel = 'Attivazioni';
-    protected static ?string $slug = 'activations';
+    protected static ?string $navigationIcon    = 'heroicon-o-check-badge';
+    protected static ?string $navigationLabel   = 'Attivazioni';
+    protected static ?string $modelLabel        = 'Attivazione';
+    protected static ?string $pluralModelLabel  = 'Attivazioni';
+    protected static ?string $slug              = 'activations';
+    protected static ?string $navigationGroup   = 'Operativo';
+    protected static ?int    $navigationSort    = 15;
 
     public static function getEloquentQuery(): Builder
     {
@@ -161,7 +163,7 @@ class ActivationResource extends Resource
     {
         return [
             'index' => Pages\ListActivations::route('/'),
-            'view' => Pages\ViewActivation::route('/{record}'),
+            'view'  => Pages\ViewActivation::route('/{record}'),
         ];
     }
 }

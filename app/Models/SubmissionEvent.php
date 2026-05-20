@@ -9,6 +9,7 @@ class SubmissionEvent extends Model
 {
     protected $fillable = [
         'form_submission_id',
+        'performed_by_user_id',
         'event_type',
         'title',
         'description',
@@ -26,6 +27,11 @@ class SubmissionEvent extends Model
         return $this->belongsTo(FormSubmission::class, 'form_submission_id');
     }
 
+    public function performedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'performed_by_user_id');
+    }
+
     /** Icona Heroicon per il tipo di evento */
     public function getIconAttribute(): string
     {
@@ -39,16 +45,15 @@ class SubmissionEvent extends Model
         };
     }
 
-    /** Colore CSS per la timeline (corrispondente agli stati) */
+    /** Colore CSS per la timeline */
     public function getColorAttribute(): string
     {
         return match ($this->event_type) {
-            'attivata'       => '#10b981', // verde
-            'respinta',
-            'annullata'      => '#ef4444', // rosso
-            'in_lavorazione' => '#6366f1', // indaco
-            'ricevuta'       => '#3b82f6', // blu
-            default          => '#9ca3af', // grigio
+            'attivata'            => '#10b981',
+            'respinta', 'annullata' => '#ef4444',
+            'in_lavorazione'      => '#6366f1',
+            'ricevuta'            => '#3b82f6',
+            default               => '#9ca3af',
         };
     }
 }

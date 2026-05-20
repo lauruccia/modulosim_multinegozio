@@ -23,7 +23,7 @@ class StoreReports extends Page
 
     public function mount(): void
     {
-        $this->from = $this->from ?: now()->startOfMonth()->toDateString();
+        $this->from = $this->from ?: now()->startOfYear()->toDateString();
         $this->until = $this->until ?: now()->toDateString();
     }
 

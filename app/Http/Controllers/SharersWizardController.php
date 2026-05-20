@@ -272,10 +272,15 @@ class SharersWizardController extends Controller
 
     private function currentStore(): ?Store
     {
-        // 1. Route model binding (URL /negozi/{slug}/attivazione/...)
-        $store = request()->route('store');
-        if ($store instanceof Store) {
-            return $store;
+        // 1. Slug nell'URL: /negozi/{slug}/attivazione/...
+        $slug = request()->route('slug');
+        if ($slug) {
+            $store = Store::where('slug', $slug)->first();
+            if ($store) {
+                return $store;
+            }
+            // Slug presente ma negozio non trovato → 404
+            abort(404);
         }
 
         // 2. Custom domain risolto dal middleware ResolveCustomDomain

@@ -19,6 +19,7 @@ class StoreResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
     protected static ?string $navigationGroup = 'Gestione';
+    protected static ?int    $navigationSort    = 10;
     protected static ?string $navigationLabel = 'Negozi';
     protected static ?string $modelLabel = 'Negozio';
     protected static ?string $pluralModelLabel = 'Negozi';
@@ -88,6 +89,23 @@ class StoreResource extends Resource
                         ->default(0),
                 ])
                 ->columns(2),
+
+            /* ── Dati bancari ── */
+            Forms\Components\Section::make('Coordinate bancarie')
+                ->description('IBAN su cui il negozio riceve il pagamento delle commissioni. Il negozio può aggiornare questi dati autonomamente dal Profilo negozio.')
+                ->icon('heroicon-o-credit-card')
+                ->schema([
+                    Forms\Components\TextInput::make('bank_account_holder')
+                        ->label('Intestatario del conto')
+                        ->maxLength(120),
+
+                    Forms\Components\TextInput::make('iban')
+                        ->label('IBAN')
+                        ->maxLength(34),
+                ])
+                ->columns(2)
+                ->collapsible()
+                ->collapsed(),
 
             /* ── Branding & White-label ── */
             Forms\Components\Section::make('Branding & White-label')
@@ -212,14 +230,15 @@ class StoreResource extends Resource
             ->actions([
                 Tables\Actions\Action::make('copy_link')
                     ->label('Copia link')
-                    ->icon('heroicon-o-link')
+                    ->icon('heroicon-o-clipboard-document')
                     ->color('gray')
-                    ->action(function (Store $record): void {
+                    ->action(function (Store $record, \Livewire\Component $livewire): void {
+                        $url = url("/negozi/{$record->slug}/attivazione/dati");
+                        $livewire->js("navigator.clipboard.writeText('{$url}').catch(()=>{})");
                         Notification::make()
-                            ->title('Link wizard negozio')
-                            ->body(url("/negozi/{$record->slug}/attivazione/dati"))
-                            ->info()
-                            ->persistent()
+                            ->title('Link copiato!')
+                            ->body($url)
+                            ->success()
                             ->send();
                     }),
 
