@@ -14,6 +14,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Forms\Get;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -76,6 +77,24 @@ class FormSubmissionResource extends Resource
     private static function storeForm(Form $form): Form
     {
         return $form->schema([
+
+            Forms\Components\Section::make('Tipo di pratica')
+                ->icon('heroicon-o-clipboard-document-list')
+                ->schema([
+                    Forms\Components\Select::make('service_type')
+                        ->label('Servizio richiesto')
+                        ->options(CommissionRule::serviceOptions())
+                        ->default('sim')
+                        ->required()
+                        ->live(),
+
+                    Forms\Components\Select::make('payment_method')
+                        ->label('Metodo di pagamento')
+                        ->options(self::paymentMethodOptions())
+                        ->default('negozio'),
+                ])
+                ->columns(2),
+
             Forms\Components\Section::make('Dati cliente')
                 ->icon('heroicon-o-user')
                 ->schema([
@@ -95,32 +114,57 @@ class FormSubmissionResource extends Resource
                 ])
                 ->columns(2),
 
-            Forms\Components\Section::make('Dettagli richiesta')
-                ->icon('heroicon-o-clipboard-document-list')
+            /* ── SIM: scelte commerciali ── */
+            Forms\Components\Section::make('Dettagli SIM')
+                ->icon('heroicon-o-sim-card')
+                ->hidden(fn (Get $get): bool => $get('service_type') !== 'sim')
                 ->schema([
-                    Forms\Components\Select::make('service_type')
-                        ->label('Servizio richiesto')
-                        ->options(CommissionRule::serviceOptions())
-                        ->default('sim')
-                        ->required(),
-
-                    Forms\Components\Select::make('payment_method')
-                        ->label('Metodo di pagamento')
-                        ->options([
-                            'carta'   => 'Carta di credito/debito',
-                            'negozio' => 'Pagamento in negozio',
-                            'dopo'    => 'Paga dopo',
-                        ])
-                        ->default('negozio'),
+                    Forms\Components\Select::make('payload.numero.scelta')
+                        ->label('Tipo attivazione')
+                        ->options(['nuovo' => 'Nuovo numero', 'portabilita' => 'Portabilità (mantiene il numero)']),
+                    Forms\Components\TextInput::make('payload.pagamento.codice_amico')
+                        ->label('Codice amico'),
                 ])
                 ->columns(2),
 
-            Forms\Components\Section::make('Note interne')
+            /* ── Luce / Gas / Luce+Gas: dati fornitura ── */
+            Forms\Components\Section::make('Dati fornitura')
+                ->icon('heroicon-o-bolt')
+                ->hidden(fn (Get $get): bool => !in_array($get('service_type'), ['luce', 'gas', 'luce_gas']))
+                ->schema([
+                    Forms\Components\TextInput::make('payload.fornitura.indirizzo')
+                        ->label('Indirizzo fornitura')
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('payload.fornitura.civico')
+                        ->label('Civico')->maxLength(10),
+                    Forms\Components\TextInput::make('payload.fornitura.cap')
+                        ->label('CAP')->maxLength(5),
+                    Forms\Components\TextInput::make('payload.fornitura.citta')
+                        ->label('Città')->maxLength(100),
+
+                    Forms\Components\TextInput::make('payload.fornitura.pod')
+                        ->label('Codice POD')
+                        ->placeholder('IT001E...')
+                        ->hidden(fn (Get $get): bool => !in_array($get('service_type'), ['luce', 'luce_gas'])),
+                    Forms\Components\TextInput::make('payload.fornitura.pdr')
+                        ->label('Codice PDR')
+                        ->placeholder('12345678901')
+                        ->hidden(fn (Get $get): bool => !in_array($get('service_type'), ['gas', 'luce_gas'])),
+
+                    Forms\Components\TextInput::make('payload.fornitura.consumo_annuo')
+                        ->label(fn (Get $get): string => $get('service_type') === 'gas' ? 'Consumo annuo gas (Smc)' : 'Consumo annuo luce (kWh)')
+                        ->numeric(),
+                    Forms\Components\TextInput::make('payload.fornitura.fornitore_attuale')
+                        ->label('Fornitore attuale'),
+                ])
+                ->columns(2),
+
+            Forms\Components\Section::make('Note')
                 ->icon('heroicon-o-chat-bubble-left-ellipsis')
                 ->schema([
                     Forms\Components\Textarea::make('admin_notes')
-                        ->label('Note')
-                        ->placeholder('Eventuali note sulla pratica...')
+                        ->label('Note sulla pratica')
+                        ->placeholder('Eventuali note...')
                         ->rows(3)
                         ->columnSpanFull(),
                 ])
@@ -133,6 +177,7 @@ class FormSubmissionResource extends Resource
     private static function adminForm(Form $form): Form
     {
         return $form->schema([
+
             Forms\Components\Section::make('Dati principali')
                 ->schema([
                     Forms\Components\Select::make('store_id')
@@ -146,21 +191,8 @@ class FormSubmissionResource extends Resource
                         ->label('Servizio')
                         ->options(CommissionRule::serviceOptions())
                         ->default('sim')
-                        ->required(),
-
-                    Forms\Components\TextInput::make('customer_name')
-                        ->label('Nome cliente')
-                        ->maxLength(255)
-                        ->required(),
-
-                    Forms\Components\TextInput::make('customer_email')
-                        ->label('Email')
-                        ->email()
-                        ->maxLength(255),
-
-                    Forms\Components\TextInput::make('customer_phone')
-                        ->label('Telefono')
-                        ->maxLength(50),
+                        ->required()
+                        ->live(),
 
                     Forms\Components\Select::make('activation_status')
                         ->label('Stato pratica')
@@ -179,25 +211,41 @@ class FormSubmissionResource extends Resource
                     Forms\Components\DateTimePicker::make('activated_at')
                         ->label('Data attivazione')
                         ->seconds(false),
-
-                    Forms\Components\Textarea::make('admin_notes')
-                        ->label('Note interne')
-                        ->rows(3)
-                        ->columnSpanFull()
-                        ->helperText('Visibili solo all\'amministrazione, non al cliente.'),
                 ])
                 ->columns(2),
 
-            Forms\Components\Section::make('Dati anagrafici cliente')
+            Forms\Components\Section::make('Dati cliente')
+                ->icon('heroicon-o-user')
+                ->schema([
+                    Forms\Components\TextInput::make('customer_name')
+                        ->label('Nome cliente')
+                        ->maxLength(255)
+                        ->required(),
+
+                    Forms\Components\TextInput::make('customer_email')
+                        ->label('Email')
+                        ->email()
+                        ->maxLength(255),
+
+                    Forms\Components\TextInput::make('customer_phone')
+                        ->label('Telefono')
+                        ->maxLength(50),
+                ])
+                ->columns(3),
+
+            /* ── SIM: anagrafica, documento, spedizione, scelte ── */
+            Forms\Components\Section::make('Dati anagrafici')
+                ->hidden(fn (Get $get): bool => !in_array($get('service_type'), ['sim', 'altro', null, '']))
                 ->schema([
                     Forms\Components\TextInput::make('payload.dati.nome')->label('Nome')->maxLength(255),
                     Forms\Components\TextInput::make('payload.dati.cognome')->label('Cognome')->maxLength(255),
                     Forms\Components\TextInput::make('payload.dati.codice_fiscale')->label('Codice fiscale')->maxLength(16),
                 ])
                 ->columns(3)
-                ->collapsed(),
+                ->collapsible()->collapsed(),
 
             Forms\Components\Section::make('Documento di identità')
+                ->hidden(fn (Get $get): bool => $get('service_type') !== 'sim')
                 ->schema([
                     Forms\Components\Select::make('payload.documento.tipo_documento')
                         ->label('Tipo documento')
@@ -206,9 +254,10 @@ class FormSubmissionResource extends Resource
                     Forms\Components\DatePicker::make('payload.documento.data_scadenza')->label('Scadenza'),
                 ])
                 ->columns(3)
-                ->collapsed(),
+                ->collapsible()->collapsed(),
 
-            Forms\Components\Section::make('Indirizzo spedizione')
+            Forms\Components\Section::make('Indirizzo spedizione SIM')
+                ->hidden(fn (Get $get): bool => $get('service_type') !== 'sim')
                 ->schema([
                     Forms\Components\TextInput::make('payload.indirizzi.spedizione.destinatario')->label('Destinatario'),
                     Forms\Components\TextInput::make('payload.indirizzi.spedizione.indirizzo')->label('Indirizzo'),
@@ -217,13 +266,14 @@ class FormSubmissionResource extends Resource
                     Forms\Components\TextInput::make('payload.indirizzi.spedizione.citta')->label('Città'),
                 ])
                 ->columns(3)
-                ->collapsed(),
+                ->collapsible()->collapsed(),
 
-            Forms\Components\Section::make('Scelte commerciali')
+            Forms\Components\Section::make('Dettagli SIM')
+                ->hidden(fn (Get $get): bool => $get('service_type') !== 'sim')
                 ->schema([
                     Forms\Components\Select::make('payload.numero.scelta')
-                        ->label('Scelta numero')
-                        ->options(['nuovo' => 'Nuovo numero', 'portabilita' => 'Mantiene il numero']),
+                        ->label('Tipo attivazione')
+                        ->options(['nuovo' => 'Nuovo numero', 'portabilita' => 'Portabilità (mantiene il numero)']),
                     Forms\Components\TextInput::make('payload.pagamento.codice_amico')->label('Codice amico'),
                     Forms\Components\Toggle::make('payload.servizi.opzione_5g')->label('5G'),
                     Forms\Components\Toggle::make('payload.servizi.ricarica_automatica')->label('Ricarica automatica'),
@@ -231,7 +281,49 @@ class FormSubmissionResource extends Resource
                     Forms\Components\Toggle::make('payload.servizi.total_security')->label('Total Security'),
                 ])
                 ->columns(3)
-                ->collapsed(),
+                ->collapsible()->collapsed(),
+
+            /* ── Luce / Gas / Luce+Gas: dati fornitura ── */
+            Forms\Components\Section::make('Dati fornitura')
+                ->icon('heroicon-o-bolt')
+                ->hidden(fn (Get $get): bool => !in_array($get('service_type'), ['luce', 'gas', 'luce_gas']))
+                ->schema([
+                    Forms\Components\TextInput::make('payload.fornitura.indirizzo')
+                        ->label('Indirizzo fornitura')->maxLength(255),
+                    Forms\Components\TextInput::make('payload.fornitura.civico')
+                        ->label('Civico')->maxLength(10),
+                    Forms\Components\TextInput::make('payload.fornitura.cap')
+                        ->label('CAP')->maxLength(5),
+                    Forms\Components\TextInput::make('payload.fornitura.citta')
+                        ->label('Città')->maxLength(100),
+
+                    Forms\Components\TextInput::make('payload.fornitura.pod')
+                        ->label('Codice POD')
+                        ->placeholder('IT001E...')
+                        ->hidden(fn (Get $get): bool => !in_array($get('service_type'), ['luce', 'luce_gas'])),
+                    Forms\Components\TextInput::make('payload.fornitura.pdr')
+                        ->label('Codice PDR')
+                        ->placeholder('12345678901')
+                        ->hidden(fn (Get $get): bool => !in_array($get('service_type'), ['gas', 'luce_gas'])),
+
+                    Forms\Components\TextInput::make('payload.fornitura.consumo_annuo')
+                        ->label(fn (Get $get): string => $get('service_type') === 'gas' ? 'Consumo annuo gas (Smc)' : 'Consumo annuo luce (kWh)')
+                        ->numeric(),
+                    Forms\Components\TextInput::make('payload.fornitura.fornitore_attuale')
+                        ->label('Fornitore attuale'),
+                ])
+                ->columns(2),
+
+            Forms\Components\Section::make('Note interne')
+                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                ->schema([
+                    Forms\Components\Textarea::make('admin_notes')
+                        ->label('Note interne')
+                        ->rows(3)
+                        ->columnSpanFull()
+                        ->helperText('Visibili solo all\'amministrazione, non al cliente.'),
+                ])
+                ->collapsible()->collapsed(),
         ]);
     }
 
@@ -305,57 +397,112 @@ class FormSubmissionResource extends Resource
                 ])
                 ->columns(2),
 
+            /* ── SIM: anagrafica, documento, spedizione, servizi ── */
+
             InfoSection::make('Anagrafica cliente')
+                ->visible(fn (FormSubmission $record): bool => in_array($record->service_type, ['sim', 'altro', null, '']))
                 ->schema([
-                    TextEntry::make('payload.dati.nome')->label('Nome'),
-                    TextEntry::make('payload.dati.cognome')->label('Cognome'),
-                    TextEntry::make('payload.dati.codice_fiscale')->label('Codice fiscale'),
+                    TextEntry::make('payload.dati.nome')->label('Nome')->placeholder('—'),
+                    TextEntry::make('payload.dati.cognome')->label('Cognome')->placeholder('—'),
+                    TextEntry::make('payload.dati.codice_fiscale')->label('Codice fiscale')->placeholder('—'),
                 ])
                 ->columns(3)
+                ->collapsible()
                 ->collapsed(),
 
-            InfoSection::make('Documento')
+            InfoSection::make('Documento di identità')
+                ->visible(fn (FormSubmission $record): bool => $record->service_type === 'sim')
                 ->schema([
                     TextEntry::make('payload.documento.tipo_documento')
                         ->label('Tipo')
+                        ->placeholder('—')
                         ->formatStateUsing(fn (?string $state) => match ($state) {
                             'carta_identita' => "Carta d'identità",
-                            'passaporto' => 'Passaporto',
-                            'patente' => 'Patente',
-                            default => $state,
+                            'passaporto'     => 'Passaporto',
+                            'patente'        => 'Patente',
+                            default          => $state,
                         }),
-                    TextEntry::make('payload.documento.numero_documento')->label('Numero'),
-                    TextEntry::make('payload.documento.data_scadenza')->label('Scadenza'),
+                    TextEntry::make('payload.documento.numero_documento')->label('Numero')->placeholder('—'),
+                    TextEntry::make('payload.documento.data_scadenza')->label('Scadenza')->placeholder('—'),
                 ])
                 ->columns(3)
+                ->collapsible()
                 ->collapsed(),
 
-            InfoSection::make('Spedizione')
+            InfoSection::make('Indirizzo spedizione SIM')
+                ->visible(fn (FormSubmission $record): bool => $record->service_type === 'sim')
                 ->schema([
-                    TextEntry::make('payload.indirizzi.spedizione.destinatario')->label('Destinatario'),
-                    TextEntry::make('payload.indirizzi.spedizione.indirizzo')->label('Indirizzo'),
-                    TextEntry::make('payload.indirizzi.spedizione.civico')->label('Civico'),
-                    TextEntry::make('payload.indirizzi.spedizione.cap')->label('CAP'),
-                    TextEntry::make('payload.indirizzi.spedizione.citta')->label('Città'),
+                    TextEntry::make('payload.indirizzi.spedizione.destinatario')->label('Destinatario')->placeholder('—'),
+                    TextEntry::make('payload.indirizzi.spedizione.indirizzo')->label('Indirizzo')->placeholder('—'),
+                    TextEntry::make('payload.indirizzi.spedizione.civico')->label('Civico')->placeholder('—'),
+                    TextEntry::make('payload.indirizzi.spedizione.cap')->label('CAP')->placeholder('—'),
+                    TextEntry::make('payload.indirizzi.spedizione.citta')->label('Città')->placeholder('—'),
                 ])
                 ->columns(3)
+                ->collapsible()
                 ->collapsed(),
 
-            InfoSection::make('Servizi scelti')
+            InfoSection::make('Dettagli SIM')
+                ->visible(fn (FormSubmission $record): bool => $record->service_type === 'sim')
                 ->schema([
                     TextEntry::make('payload.numero.scelta')
-                        ->label('Numero')
+                        ->label('Tipo attivazione')
+                        ->placeholder('—')
                         ->formatStateUsing(fn (?string $state) => match ($state) {
-                            'nuovo' => 'Nuovo numero', 'portabilita' => 'Mantiene il numero', default => $state,
+                            'nuovo'       => 'Nuovo numero',
+                            'portabilita' => 'Portabilità (mantiene il numero)',
+                            default       => $state,
                         }),
-                    TextEntry::make('payload.pagamento.codice_amico')->label('Codice amico')->placeholder('-'),
-                    TextEntry::make('payload.servizi.opzione_5g')->label('5G')->formatStateUsing(fn ($state) => $state ? 'Sì' : 'No'),
-                    TextEntry::make('payload.servizi.ricarica_automatica')->label('Ricarica automatica')->formatStateUsing(fn ($state) => $state ? 'Sì' : 'No'),
-                    TextEntry::make('payload.servizi.safe_call')->label('SafeCall')->formatStateUsing(fn ($state) => $state ? 'Sì' : 'No'),
-                    TextEntry::make('payload.servizi.total_security')->label('Total Security')->formatStateUsing(fn ($state) => $state ? 'Sì' : 'No'),
+                    TextEntry::make('payload.pagamento.codice_amico')->label('Codice amico')->placeholder('—'),
+                    TextEntry::make('payload.servizi.opzione_5g')
+                        ->label('5G')
+                        ->formatStateUsing(fn ($state): string => $state ? 'Sì' : 'No')
+                        ->badge()
+                        ->color(fn ($state): string => $state ? 'success' : 'gray'),
+                    TextEntry::make('payload.servizi.ricarica_automatica')
+                        ->label('Ricarica automatica')
+                        ->formatStateUsing(fn ($state): string => $state ? 'Sì' : 'No')
+                        ->badge()
+                        ->color(fn ($state): string => $state ? 'success' : 'gray'),
+                    TextEntry::make('payload.servizi.safe_call')
+                        ->label('SafeCall')
+                        ->formatStateUsing(fn ($state): string => $state ? 'Sì' : 'No')
+                        ->badge()
+                        ->color(fn ($state): string => $state ? 'success' : 'gray'),
+                    TextEntry::make('payload.servizi.total_security')
+                        ->label('Total Security')
+                        ->formatStateUsing(fn ($state): string => $state ? 'Sì' : 'No')
+                        ->badge()
+                        ->color(fn ($state): string => $state ? 'success' : 'gray'),
                 ])
                 ->columns(3)
+                ->collapsible()
                 ->collapsed(),
+
+            /* ── Luce / Gas / Luce+Gas: dati fornitura ── */
+
+            InfoSection::make('Dati fornitura')
+                ->icon('heroicon-o-bolt')
+                ->visible(fn (FormSubmission $record): bool => in_array($record->service_type, ['luce', 'gas', 'luce_gas']))
+                ->schema([
+                    TextEntry::make('payload.fornitura.indirizzo')->label('Indirizzo fornitura')->placeholder('—'),
+                    TextEntry::make('payload.fornitura.civico')->label('Civico')->placeholder('—'),
+                    TextEntry::make('payload.fornitura.cap')->label('CAP')->placeholder('—'),
+                    TextEntry::make('payload.fornitura.citta')->label('Città')->placeholder('—'),
+                    TextEntry::make('payload.fornitura.pod')
+                        ->label('Codice POD')
+                        ->placeholder('—')
+                        ->visible(fn (FormSubmission $record): bool => in_array($record->service_type, ['luce', 'luce_gas'])),
+                    TextEntry::make('payload.fornitura.pdr')
+                        ->label('Codice PDR')
+                        ->placeholder('—')
+                        ->visible(fn (FormSubmission $record): bool => in_array($record->service_type, ['gas', 'luce_gas'])),
+                    TextEntry::make('payload.fornitura.consumo_annuo')
+                        ->label(fn (FormSubmission $record): string => $record->service_type === 'gas' ? 'Consumo annuo gas (Smc)' : 'Consumo annuo luce (kWh)')
+                        ->placeholder('—'),
+                    TextEntry::make('payload.fornitura.fornitore_attuale')->label('Fornitore attuale')->placeholder('—'),
+                ])
+                ->columns(2),
 
             InfoSection::make('Storico pratica')
                 ->description('Aggiornamenti visibili al cliente nella pagina di tracking.')
