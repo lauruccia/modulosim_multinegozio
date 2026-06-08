@@ -116,7 +116,7 @@ class FormSubmissionResource extends Resource
 
             /* ── SIM: scelte commerciali ── */
             Forms\Components\Section::make('Dettagli SIM')
-                ->icon('heroicon-o-sim-card')
+                ->icon('heroicon-o-device-phone-mobile')
                 ->hidden(fn (Get $get): bool => $get('service_type') !== 'sim')
                 ->schema([
                     Forms\Components\Select::make('payload.numero.scelta')
