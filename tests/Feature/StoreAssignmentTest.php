@@ -68,6 +68,57 @@ class StoreAssignmentTest extends TestCase
         $this->assertSame('public', $submission->source);
     }
 
+    public function test_public_wizard_clears_stale_store_session_on_first_step(): void
+    {
+        Mail::fake();
+
+        $store = Store::create([
+            'name' => '4tacche',
+            'slug' => '4tacche',
+            'is_active' => true,
+        ]);
+
+        $this->withSession(['sharers_store_id' => $store->id]);
+
+        $this->completeWizard('attivazione');
+
+        $submission = FormSubmission::first();
+
+        $this->assertNotNull($submission);
+        $this->assertNull($submission->store_id);
+        $this->assertSame('public', $submission->source);
+    }
+
+    public function test_store_slug_wizard_keeps_store_after_redirecting_to_public_steps(): void
+    {
+        Mail::fake();
+
+        $store = Store::create([
+            'name' => '4tacche',
+            'slug' => '4tacche',
+            'is_active' => true,
+        ]);
+
+        $this->get("/negozi/{$store->slug}/attivazione/dati")->assertOk();
+        $this->post("/negozi/{$store->slug}/attivazione/dati", [
+            'nome' => 'Mario',
+            'cognome' => 'Rossi',
+            'codice_fiscale' => 'RSSMRA80A01H501U',
+            'consensi' => [
+                'accetta_condizioni' => '1',
+                'attivazione_immediata' => '1',
+            ],
+        ])->assertRedirect();
+
+        $this->completeWizardFromStep('attivazione', 'documento');
+
+        $submission = FormSubmission::first();
+
+        $this->assertNotNull($submission);
+        $this->assertSame($store->id, $submission->store_id);
+        $this->assertSame('store_link', $submission->source);
+    }
+
     public function test_store_user_backend_creation_assigns_own_store(): void
     {
         $store = Store::create([
@@ -129,6 +180,31 @@ class StoreAssignmentTest extends TestCase
                 'attivazione_immediata' => '1',
             ],
         ], [], [], $server)->assertRedirect();
+
+        $this->completeWizardFromStep($prefix, 'documento', $host);
+    }
+
+    private function completeWizardFromStep(string $prefix, string $firstStep, string $host = 'localhost'): void
+    {
+        $server = [
+            'HTTP_HOST' => $host,
+            'SERVER_NAME' => $host,
+        ];
+        $url = fn (string $path): string => $host === 'localhost'
+            ? "/{$prefix}{$path}"
+            : "http://{$host}/{$prefix}{$path}";
+
+        if ($firstStep === 'dati') {
+            $this->call('POST', $url('/dati'), [
+                'nome' => 'Mario',
+                'cognome' => 'Rossi',
+                'codice_fiscale' => 'RSSMRA80A01H501U',
+                'consensi' => [
+                    'accetta_condizioni' => '1',
+                    'attivazione_immediata' => '1',
+                ],
+            ], [], [], $server)->assertRedirect();
+        }
 
         $this->call('POST', $url('/documento'), [
             'tipo_documento' => 'carta_identita',

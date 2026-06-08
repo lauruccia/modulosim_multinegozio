@@ -22,6 +22,8 @@ class SharersWizardController extends Controller
         if ($store) {
             abort_unless($store->is_active, 404);
             session(['sharers_store_id' => $store->id]);
+        } elseif ($step === 'dati') {
+            session()->forget('sharers_store_id');
         }
 
         return view("wizard.$step", [
@@ -41,6 +43,8 @@ class SharersWizardController extends Controller
         if ($store) {
             abort_unless($store->is_active, 404);
             session(['sharers_store_id' => $store->id]);
+        } elseif ($step === 'dati') {
+            session()->forget('sharers_store_id');
         }
 
         $validated = match ($step) {
